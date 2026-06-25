@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import io
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from rich.console import Console
@@ -54,6 +54,29 @@ class OracleRunResult:
     details: dict[str, Any]
 
 
+_CREDENTIAL_FIELDS = ("auth_token", "api_key", "app_key", "api_token", "token")
+
+
+def _integration_config_mapping(config: Any) -> dict[str, Any]:
+    """Normalize classified integration configs to a plain mapping."""
+    if isinstance(config, dict):
+        return config
+    model_dump = getattr(config, "model_dump", None)
+    if callable(model_dump):
+        return cast(dict[str, Any], model_dump(exclude_none=True))
+    return {}
+
+
+def _resolved_integrations_map(resolved_updates: dict[str, Any]) -> dict[str, Any]:
+    """Return the service-keyed map from ``resolve_integrations`` output."""
+    raw = resolved_updates.get("resolved_integrations") or {}
+    return dict(raw) if isinstance(raw, dict) else {}
+
+
+def _has_live_credentials(config: dict[str, Any]) -> bool:
+    return any(config.get(field) for field in _CREDENTIAL_FIELDS)
+
+
 def resolve_live_integrations(
     override: dict[str, Any] | None,
 ) -> tuple[dict[str, Any] | None, list[str]]:
@@ -83,19 +106,18 @@ def resolve_live_integrations(
 
     from app.core.orchestration.node.resolve_integrations import resolve_integrations
 
-    resolved = resolve_integrations({})  # type: ignore[arg-type]  # real store/env resolution
+    resolved_updates = resolve_integrations({})  # type: ignore[arg-type]  # real store/env resolution
+    resolved_map = _resolved_integrations_map(resolved_updates)
     expanded: dict[str, Any] = {}
     unavailable: list[str] = []
     for service, config in override.items():
         if config != LIVE_INTEGRATION_SENTINEL:
             expanded[service] = config
             continue
-        live_config = resolved.get(service)
+        live_config = _integration_config_mapping(resolved_map.get(service))
         # A usable integration must carry at least one credential token; the bare
         # classifier returns an empty shell for unconfigured services.
-        if not isinstance(live_config, dict) or not any(
-            live_config.get(field) for field in ("auth_token", "api_key", "api_token", "token")
-        ):
+        if not _has_live_credentials(live_config):
             unavailable.append(service)
             continue
         expanded[service] = {**live_config, "connection_verified": True}
@@ -242,6 +264,10 @@ def _gathered_contract_failures(
         failures.append("must_not_call")
     if any(name not in gathered_valid_data for name in contract.must_return_valid_data):
         failures.append("must_return_valid_data")
+    if contract.must_return_valid_data_any and not (
+        gathered_valid_data & set(contract.must_return_valid_data_any)
+    ):
+        failures.append("must_return_valid_data_any")
     return failures
 
 
