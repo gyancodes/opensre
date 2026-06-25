@@ -10,7 +10,6 @@ from rich.console import Console
 import app.cli.interactive_shell.routing.handle_message_with_agent.orchestration.agent_actions as _agent_actions
 from app.analytics.events import Event
 from app.analytics.provider import JsonValue, get_analytics
-from app.analytics.repl_context import bind_cli_session_id, reset_cli_session_id
 from app.cli.interactive_shell.chat import cli_agent as _cli_agent
 from app.cli.interactive_shell.chat.tool_gathering import gather_tool_evidence
 from app.cli.interactive_shell.command_registry import dispatch_slash
@@ -79,31 +78,27 @@ def execute_routed_turn(
     decision: RouteDecision,
 ) -> None:
     """Record route telemetry and hand the turn to the agent."""
-    session_token = bind_cli_session_id(session.session_id)
-    try:
-        recorder = PromptRecorder.start(
-            session=session, text=text, route_kind=decision.route_kind.value
-        )
-        session.last_route_decision = decision
-        get_analytics().capture(
-            Event.INTERACTIVE_SHELL_ROUTE_DECISION,
-            cast(dict[str, JsonValue], decision.to_event_payload()),
-        )
+    recorder = PromptRecorder.start(
+        session=session, text=text, route_kind=decision.route_kind.value
+    )
+    session.last_route_decision = decision
+    get_analytics().capture(
+        Event.INTERACTIVE_SHELL_ROUTE_DECISION,
+        cast(dict[str, JsonValue], decision.to_event_payload()),
+    )
 
-        handle_message_with_agent(
-            text,
-            session,
-            console,
-            recorder=recorder,
-            confirm_fn=confirm_fn,
-            is_tty=is_tty,
-            on_exit=on_exit,
-            execute_actions=execute_cli_actions,
-            answer_agent=_answer_cli_agent_with_tools,
-            dispatch_command=dispatch_slash,
-        )
-    finally:
-        reset_cli_session_id(session_token)
+    handle_message_with_agent(
+        text,
+        session,
+        console,
+        recorder=recorder,
+        confirm_fn=confirm_fn,
+        is_tty=is_tty,
+        on_exit=on_exit,
+        execute_actions=execute_cli_actions,
+        answer_agent=_answer_cli_agent_with_tools,
+        dispatch_command=dispatch_slash,
+    )
 
 
 __all__ = ["execute_routed_turn"]
