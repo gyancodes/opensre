@@ -215,10 +215,14 @@ def test_repl_main_identifies_saved_github_username(monkeypatch: Any) -> None:
             return None
 
     monkeypatch.setattr(entrypoint, "ReplSession", _Session)
+
+    def _persistent_task_registry() -> None:
+        return None
+
     monkeypatch.setattr(
         entrypoint.TaskRegistry,
         "persistent",
-        staticmethod(lambda: None),
+        staticmethod(_persistent_task_registry),
     )
     monkeypatch.setattr(
         entrypoint._prompt_surface,
