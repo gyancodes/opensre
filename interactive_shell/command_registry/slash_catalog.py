@@ -430,7 +430,12 @@ def slash_invoke_tool_description(specs: list[SlashCommandSpec] | None = None) -
     header = (
         "Run a slash command in the OpenSRE interactive shell. "
         "Pick the command whose use-case best matches the user request, then supply "
-        "positional args in the args array."
+        "positional args in the args array. This tool covers only the slash-command "
+        "clause of a request. For compound requests, still emit a separate tool call "
+        "for every other actionable clause in order; for example "
+        '`run /remote and then investigate "hello world"` requires '
+        'slash_invoke(command="/remote", args=[]) followed by '
+        'investigation_start(alert_text="hello world").'
     )
     # Keep planner payload intentionally tiny for live LLM runs with strict
     # prompt budgets. The full rich catalog remains available via

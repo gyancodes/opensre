@@ -194,3 +194,12 @@ def test_investigation_tool_description_preserves_compound_slash_guidance() -> N
     assert "run /remote and then investigate" in description
     assert "separate second tool call" in description
     assert "never drop the quoted investigation" in description
+
+
+def test_slash_tool_description_preserves_compound_followup_guidance() -> None:
+    entry = REGISTRY.get("slash_invoke")
+    assert entry is not None
+    description = entry.description.lower()
+    assert "only the slash-command clause" in description
+    assert "run /remote and then investigate" in description
+    assert "investigation_start" in description
