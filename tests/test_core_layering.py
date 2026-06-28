@@ -30,7 +30,11 @@ _CORE_RUNTIME_MODULES: tuple[Path, ...] = (
     Path("core/events.py"),
     Path("core/execution.py"),
     Path("core/llm_invoke_errors.py"),
-    Path("core/messages.py"),
+    Path("core/messages/__init__.py"),
+    Path("core/messages/coercion.py"),
+    Path("core/messages/factories.py"),
+    Path("core/messages/models.py"),
+    Path("core/messages/provider_conversion.py"),
     Path("core/provider.py"),
     Path("core/types.py"),
 )
