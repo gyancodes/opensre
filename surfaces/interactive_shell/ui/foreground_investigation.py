@@ -36,9 +36,14 @@ def _render_credit_exhausted_recovery_hint(console: Console, message: str) -> No
         return
     console.print(f"[{DIM}]Run /model to switch to another provider.[/]")
     console.print(
-        f"[{DIM}]Or run /auth login <provider> to re-authenticate "
-        f"or add a different provider.[/]"
+        f"[{DIM}]Or run /auth login <provider> to re-authenticate or add a different provider.[/]"
     )
+
+
+def _contains_auth_login_hint(message: str | None) -> bool:
+    if not message:
+        return False
+    return "auth login" in message
 
 
 def _llm_fields(usage: InvestigationLlmUsage, started: float) -> dict[str, Any]:
@@ -85,7 +90,8 @@ def run_foreground_investigation(
         task.mark_failed(str(exc))
         message = str(exc)
         console.print(f"[{ERROR}]investigation failed:[/] {escape(message)}")
-        _render_credit_exhausted_recovery_hint(console, message)
+        if not _contains_auth_login_hint(exc.suggestion):
+            _render_credit_exhausted_recovery_hint(console, message)
         if exc.suggestion:
             console.print(f"[{WARNING}]suggestion:[/] {escape(exc.suggestion)}")
         category, integration, integration_detail = classify_investigation_failure(exc)

@@ -111,3 +111,40 @@ def test_run_foreground_investigation_credit_exhausted_shows_auth_login_hint(
     assert "/model" in output
     assert "/auth login" in output
     task.mark_failed.assert_called_once()
+
+
+def test_run_foreground_investigation_opensre_error_does_not_duplicate_auth_hint(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    session = Session()
+    console = Console(force_terminal=False, color_system=None, highlight=False)
+    task = MagicMock(spec=TaskRecord)
+    task.cancel_requested = False
+    monkeypatch.setattr(
+        session.task_registry,
+        "create",
+        lambda *_args, **_kwargs: task,
+    )
+
+    def _raise_credit_exhausted_opensre_error(_task: TaskRecord) -> dict[str, object]:
+        raise OpenSREError(
+            "Anthropic credit exhausted (provider billing/quota). Original error: 400",
+            suggestion=(
+                "Run /auth login <provider> to re-authenticate or add a different provider."
+            ),
+        )
+
+    outcome = run_foreground_investigation(
+        session=session,
+        console=console,
+        task_command="/investigate alert.json",
+        run=_raise_credit_exhausted_opensre_error,
+        exception_context="test",
+        target="alert.json",
+    )
+
+    output = capsys.readouterr().out
+    assert outcome.status == "failed"
+    assert output.count("/auth login") == 1
+    task.mark_failed.assert_called_once()
