@@ -9,6 +9,7 @@ import pytest
 from rich.console import Console
 
 from core.agent_harness.session import Session
+from core.llm.llm_retry import LLMCreditExhaustedError
 from platform.common.errors import OpenSREError
 from platform.common.task_types import TaskRecord
 from surfaces.interactive_shell.ui.foreground_investigation import run_foreground_investigation
@@ -75,3 +76,38 @@ def test_run_foreground_investigation_early_cancel_omits_stale_investigation_id(
     assert outcome.status == "cancelled"
     assert outcome.investigation_id == ""
     task.mark_cancelled.assert_called_once()
+
+
+def test_run_foreground_investigation_credit_exhausted_shows_auth_login_hint(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    session = Session()
+    console = Console(force_terminal=False, color_system=None, highlight=False)
+    task = MagicMock(spec=TaskRecord)
+    task.cancel_requested = False
+    monkeypatch.setattr(
+        session.task_registry,
+        "create",
+        lambda *_args, **_kwargs: task,
+    )
+
+    def _raise_credit_exhausted(_task: TaskRecord) -> dict[str, object]:
+        raise LLMCreditExhaustedError(
+            "Anthropic credit exhausted (provider billing/quota). Original error: 400"
+        )
+
+    outcome = run_foreground_investigation(
+        session=session,
+        console=console,
+        task_command="/investigate alert.json",
+        run=_raise_credit_exhausted,
+        exception_context="test",
+        target="alert.json",
+    )
+
+    output = capsys.readouterr().out
+    assert outcome.status == "failed"
+    assert "/model" in output
+    assert "/auth login" in output
+    task.mark_failed.assert_called_once()
