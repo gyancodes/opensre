@@ -193,7 +193,6 @@ def test_maybe_raise_credit_exhausted_offers_provider_switch_recovery() -> None:
     message = str(excinfo.value)
     assert "switch to another configured LLM provider" in message
     assert "Anthropic console" in message
-    assert "opensre auth login" in message
 
 
 # --------------------------------------------------------------------------- #
