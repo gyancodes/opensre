@@ -53,7 +53,15 @@ class GatewayOutputSink:
         self._set_status(f"{label}…")
 
     def render_error(self, message: str) -> None:
-        self._finalize(f"Error: {message}")
+        from core.llm.llm_retry import CREDIT_EXHAUSTED_MARKER
+
+        hint = ""
+        if CREDIT_EXHAUSTED_MARKER in message:
+            hint = (
+                "\n\nHint: run `opensre auth login <provider>` "
+                "to re-authenticate or switch to a different provider."
+            )
+        self._finalize(f"Error: {message}{hint}")
 
     def stream(
         self,

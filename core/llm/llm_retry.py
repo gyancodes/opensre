@@ -137,6 +137,8 @@ def maybe_raise_credit_exhausted(provider_name: str, err: BaseException) -> None
             f"{provider_name} {CREDIT_EXHAUSTED_MARKER}. "
             f"To keep going, switch to another configured LLM provider — or top up "
             f"your balance / raise the spending cap at the {provider_name} console. "
+            f"Hint: run `opensre auth login <provider>` (or /auth login in the shell) "
+            f"to add or switch credentials. "
             f"Original error: {err}"
         ) from err
 
