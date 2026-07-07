@@ -7,7 +7,7 @@ import threading
 import time
 from collections.abc import Iterable
 
-from core.llm.llm_retry import CREDIT_EXHAUSTED_MARKER
+from core.llm.shared.llm_retry import CREDIT_EXHAUSTED_MARKER
 from gateway.polling.telegram_poller.client import TelegramBotClient
 from integrations.telegram.formatting import markdown_to_telegram_html
 from platform.common.truncation import truncate

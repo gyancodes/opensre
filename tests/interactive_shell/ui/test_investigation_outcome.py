@@ -9,7 +9,7 @@ import pytest
 from rich.console import Console
 
 from core.agent_harness.session import Session
-from core.llm.llm_retry import LLMCreditExhaustedError
+from core.llm.shared.llm_retry import LLMCreditExhaustedError
 from platform.common.errors import OpenSREError
 from platform.common.task_types import TaskRecord
 from surfaces.interactive_shell.ui.foreground_investigation import run_foreground_investigation

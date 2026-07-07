@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from core.llm.llm_retry import LLMCreditExhaustedError
+from core.llm.shared.llm_retry import LLMCreditExhaustedError
 from integrations.llm_cli.errors import CLITimeoutError
 from surfaces.cli.error_mapping import reraise_cli_runtime_error
 from surfaces.interactive_shell.utils.error_handling.errors import OpenSREError

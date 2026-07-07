@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 from rich.console import Console
 from rich.markup import escape
 
-from core.llm.llm_retry import CREDIT_EXHAUSTED_MARKER
+from core.llm.shared.llm_retry import CREDIT_EXHAUSTED_MARKER
 from platform.common.errors import OpenSREError
 from platform.common.task_types import TaskKind, TaskRecord
 from platform.terminal.theme import DIM, ERROR, WARNING

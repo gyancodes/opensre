@@ -83,7 +83,7 @@ def test_finalize_falls_back_to_plain_when_html_rejected() -> None:
 
 
 def test_render_error_appends_auth_login_hint_on_credit_exhaustion() -> None:
-    from core.llm.llm_retry import CREDIT_EXHAUSTED_MARKER
+    from core.llm.shared.llm_retry import CREDIT_EXHAUSTED_MARKER
 
     client = MagicMock(spec=TelegramBotClient)
     client.send_message.return_value = (True, "", "1")
